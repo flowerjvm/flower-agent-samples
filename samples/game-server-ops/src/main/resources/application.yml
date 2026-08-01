@@ -1,0 +1,23 @@
+server:
+  port: ${SERVER_PORT:8090}
+
+flower:
+  enabled: true
+  auto-start: true
+  workers:
+    - name: ai-control
+      interval-ms: 50
+
+sample:
+  model:
+    base-url: ${FLOWER_AGENT_BASE_URL:https://api.openai.com/v1}
+    model: ${FLOWER_AGENT_MODEL:gpt-4.1-mini}
+    api-key: ${FLOWER_AGENT_API_KEY:}
+    api-key-file: ${FLOWER_AGENT_API_KEY_FILE:}
+    timeout: ${FLOWER_AGENT_MODEL_TIMEOUT:60s}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

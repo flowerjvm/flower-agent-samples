@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Game Server Operations</title>
+    <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<header class="topbar">
+    <div>
+        <p class="product-label">FLOWER AGENT SAMPLE</p>
+        <h1>Game Server Operations</h1>
+    </div>
+    <div class="model-state" aria-label="Model configuration">
+        <span id="credential-dot" class="state-dot"></span>
+        <div>
+            <strong id="model-name">Loading model</strong>
+            <span id="model-endpoint">Checking endpoint</span>
+        </div>
+    </div>
+</header>
+
+<main>
+    <section class="server-band" aria-labelledby="servers-heading">
+        <div class="section-heading">
+            <h2 id="servers-heading">Server Fleet</h2>
+            <button id="reset-button" class="secondary-button" type="button">Reset Demo</button>
+        </div>
+        <div id="server-list" class="server-list"></div>
+    </section>
+
+    <div class="workspace">
+        <section class="conversation" aria-labelledby="conversation-heading">
+            <div class="section-heading">
+                <h2 id="conversation-heading">Operator Task</h2>
+                <span id="task-status" class="status-pill neutral">IDLE</span>
+            </div>
+            <div id="chat-log" class="chat-log" aria-live="polite">
+                <div class="message agent-message">
+                    <span class="message-author">Agent</span>
+                    <p>Ready.</p>
+                </div>
+            </div>
+            <form id="task-form" class="task-form">
+                <label for="task-input">Command</label>
+                <textarea id="task-input" rows="3">Investigate server-alpha, restart it if the evidence justifies recovery, and report the final state.</textarea>
+                <div class="form-actions">
+                    <button id="cancel-button" class="secondary-button" type="button" disabled>Cancel</button>
+                    <button id="run-button" class="primary-button" type="submit">Run Agent</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="activity" aria-labelledby="activity-heading">
+            <div class="section-heading">
+                <h2 id="activity-heading">Execution</h2>
+                <span id="usage-summary" class="usage-summary">0 turns / 0 tools</span>
+            </div>
+            <div class="tabs" role="tablist" aria-label="Execution views">
+                <button class="tab active" data-panel="agent-panel" type="button" role="tab">Agent</button>
+                <button class="tab" data-panel="action-panel" type="button" role="tab">Actions</button>
+                <button class="tab" data-panel="report-panel" type="button" role="tab">Report</button>
+            </div>
+            <div id="agent-panel" class="tab-panel active" role="tabpanel">
+                <ol id="agent-timeline" class="timeline">
+                    <li class="empty-state">Waiting for AgentRun.</li>
+                </ol>
+            </div>
+            <div id="action-panel" class="tab-panel" role="tabpanel">
+                <ol id="action-timeline" class="timeline">
+                    <li class="empty-state">No governed action requested.</li>
+                </ol>
+            </div>
+            <div id="report-panel" class="tab-panel" role="tabpanel">
+                <div id="report-view" class="report-view empty-state">No validated report.</div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>
