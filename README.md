@@ -62,32 +62,14 @@ Published sample dependencies are pinned to these versions:
 | Flower Action Runtime | `0.3.1` |
 | Flower Agent | `0.1.0` |
 
-Flower Agent `0.1.0` is not yet released to Maven Central. Until it is
-available, install a compatible Flower Agent checkout into Maven Local and
-explicitly opt this build into using that repository:
-
 ```powershell
-git clone --branch feat/openai-compatible-model `
-    https://github.com/flowerjvm/flower-agent.git
 git clone https://github.com/flowerjvm/flower-agent-samples.git
-
-cd flower-agent
-.\mvnw.cmd -B -ntp clean install
-
-cd ..\flower-agent-samples
-.\gradlew.bat check `
-    '-PuseMavenLocal=true' `
-    '-PflowerAgentVersion=0.1.0-SNAPSHOT'
-```
-
-After Flower Agent `0.1.0` is published, the normal build is simply:
-
-```powershell
+cd flower-agent-samples
 .\gradlew.bat check
 ```
 
-The default distributable build does not silently use `mavenLocal()` or a
-mutable neighboring checkout.
+The build resolves all Flower libraries from Maven Central and does not use
+`mavenLocal()` or a mutable neighboring checkout.
 
 ## Repository layout
 

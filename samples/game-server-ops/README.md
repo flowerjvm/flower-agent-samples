@@ -150,8 +150,7 @@ server twice.
 
 ## Run from source
 
-JDK 21 is required. Until Flower Agent `0.1.0` is published, first follow the
-[root build instructions](../../README.md#build) to install its snapshot.
+JDK 21 is required. All Flower dependencies resolve from Maven Central.
 
 ### OpenAI API
 
@@ -160,9 +159,7 @@ $env:FLOWER_AGENT_BASE_URL = "https://api.openai.com/v1"
 $env:FLOWER_AGENT_MODEL = "gpt-4.1-mini"
 $env:FLOWER_AGENT_API_KEY = "<read from your secret store>"
 
-.\gradlew.bat :samples:game-server-ops:bootRun `
-    '-PuseMavenLocal=true' `
-    '-PflowerAgentVersion=0.1.0-SNAPSHOT'
+.\gradlew.bat :samples:game-server-ops:bootRun
 ```
 
 ### Local OpenAI-compatible server
@@ -172,9 +169,7 @@ $env:FLOWER_AGENT_BASE_URL = "http://localhost:11434/v1"
 $env:FLOWER_AGENT_MODEL = "qwen3:8b"
 Remove-Item Env:FLOWER_AGENT_API_KEY -ErrorAction SilentlyContinue
 
-.\gradlew.bat :samples:game-server-ops:bootRun `
-    '-PuseMavenLocal=true' `
-    '-PflowerAgentVersion=0.1.0-SNAPSHOT'
+.\gradlew.bat :samples:game-server-ops:bootRun
 ```
 
 The endpoint must implement compatible `/chat/completions` tool calling. Model
@@ -212,9 +207,7 @@ The static browser UI is under `src/main/resources/static`.
 ## Test
 
 ```powershell
-.\gradlew.bat :samples:game-server-ops:check `
-    '-PuseMavenLocal=true' `
-    '-PflowerAgentVersion=0.1.0-SNAPSHOT'
+.\gradlew.bat :samples:game-server-ops:check
 ```
 
 The deterministic integration test uses a scripted model. It proves that an

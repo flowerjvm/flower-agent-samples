@@ -4,18 +4,11 @@ plugins {
     id("io.github.flowerjvm.flower-check") version "0.1.1" apply false
 }
 
-val useMavenLocal = providers.gradleProperty("useMavenLocal")
-    .map(String::toBoolean)
-    .orElse(false)
-
 allprojects {
     group = "io.github.flowerjvm.flower.agent.samples"
     version = "0.1.0-SNAPSHOT"
 
     repositories {
-        if (useMavenLocal.get()) {
-            mavenLocal()
-        }
         mavenCentral()
     }
 }

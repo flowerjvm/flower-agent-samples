@@ -6,14 +6,12 @@ plugins {
 
 description = "Web sample composing Flower, Flower Agent, AI Harness, and Action Runtime."
 
-val flowerAgentVersion = providers.gradleProperty("flowerAgentVersion").orElse("0.1.0")
-
 dependencies {
     implementation("io.github.flowerjvm:flower-spring-boot-starter:0.1.1")
     implementation("io.github.flowerjvm:flower-observability:0.1.1")
 
-    implementation("io.github.flowerjvm:flower-agent-core:${flowerAgentVersion.get()}")
-    implementation("io.github.flowerjvm:flower-agent-model-openai-compatible:${flowerAgentVersion.get()}")
+    implementation("io.github.flowerjvm:flower-agent-core:0.1.0")
+    implementation("io.github.flowerjvm:flower-agent-model-openai-compatible:0.1.0")
 
     implementation("io.github.flowerjvm:flower-ai-harness-core:0.1.2")
     implementation("io.github.flowerjvm:flower-ai-harness-validator-jackson:0.1.2")
