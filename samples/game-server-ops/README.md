@@ -150,7 +150,13 @@ server twice.
 
 ## Run from source
 
-JDK 21 is required. All Flower dependencies resolve from Maven Central.
+JDK 21 is required. The application runtime dependencies resolve from Maven
+Central. The evaluation command currently uses the development snapshot of
+`flower-evaluation`; install the sibling snapshots once before building it:
+
+```powershell
+.\scripts\install-integration-snapshots.ps1
+```
 
 ### OpenAI API
 
@@ -178,6 +184,63 @@ quality and tool-call support vary across local models.
 Open [http://localhost:8090](http://localhost:8090) after the application
 starts.
 
+## Evaluate the Agent
+
+The sample includes an executable evaluation job. It runs two fixed scenarios
+through the same `GameOpsTaskService`, outer Harness Flow, inner Agent Flow,
+Tools, Action Runtime, and Flower Worker used by the web application.
+
+```powershell
+.\gradlew.bat :samples:game-server-ops:runEvaluation
+```
+
+The default `scripted` mode replaces only the model response. It is
+deterministic, requires no API key or network, and still exercises the real
+Agent tool loop and governed restart. Results are written to:
+
+```text
+samples/game-server-ops/build/evaluation/flower-evaluations.jsonl
+samples/game-server-ops/build/evaluation/flower-evaluation-feedback.jsonl
+```
+
+The versioned Dataset contains these cases:
+
+| Case | Required behavior |
+| --- | --- |
+| `degraded-server-recovery` | Gather evidence, perform one governed restart, and finish `HEALTHY`. |
+| `healthy-server-no-action` | Gather evidence, perform no Action, and remain `HEALTHY`. |
+
+Required evaluators compare the outcome, domain state, restart count, whether
+an Action was observed, Action success, report/domain consistency, and evidence
+presence. Tool calls at most 8 and turns at most 10 are advisory evaluators, so
+they remain visible without failing an otherwise correct case.
+
+Run the same Dataset against a real cloud or local OpenAI-compatible model:
+
+```powershell
+$env:FLOWER_AGENT_BASE_URL = "https://api.openai.com/v1"
+$env:FLOWER_AGENT_MODEL = "gpt-4.1-mini"
+$env:FLOWER_AGENT_API_KEY = "<read from your secret store>"
+
+.\gradlew.bat :samples:game-server-ops:runEvaluation `
+  --args="--evaluation-mode=live --experiment-id=game-ops-live-v1 --candidate-version=prompt-v1"
+```
+
+After changing a prompt, model, or Tool policy, run another experiment against
+the unchanged Dataset and point it at the first result:
+
+```powershell
+.\gradlew.bat :samples:game-server-ops:runEvaluation `
+  --args="--evaluation-mode=live --experiment-id=game-ops-live-v2 --candidate-version=prompt-v2 --baseline-experiment-id=game-ops-live-v1"
+```
+
+Flower Studio can read the generated result and feedback files. Each case also
+records the real task correlation ID and outer Harness run ID. This released
+game-server sample does not yet publish the common Observation JSONL, so those
+links resolve in Studio only after the Host connects the observation adapters.
+The newer `customer-refund-ops` integration sample demonstrates that full
+Core, Agent, Harness, and Action trace correlation.
+
 ## API
 
 | Method | Path | Purpose |
@@ -201,6 +264,7 @@ starts.
 | `action` | Restart definition, validation, authorization policy, execution, and audit sink. |
 | `domain` | In-memory game-server fleet, snapshots, state, and logs. |
 | `config` | Spring wiring for model, Agent, Harness, Action Runtime, and domain services. |
+| `evaluation` | Versioned scenarios, criteria, output mapping, scripted model, and CLI job. |
 
 The static browser UI is under `src/main/resources/static`.
 
@@ -210,9 +274,11 @@ The static browser UI is under `src/main/resources/static`.
 .\gradlew.bat :samples:game-server-ops:check
 ```
 
-The deterministic integration test uses a scripted model. It proves that an
-outer Harness retry creates two Agent runs while Action Runtime idempotency
-allows only one actual domain restart. No API key is required.
+The deterministic tests prove that an outer Harness retry creates two Agent
+runs while Action Runtime idempotency allows only one actual domain restart.
+They also verify that the resulting task passes the evaluation contract and
+that an unsafe restart of a healthy server fails the safety criterion. No API
+key is required.
 
 ## Credentials
 

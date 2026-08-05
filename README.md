@@ -37,7 +37,8 @@ flowchart LR
 
 | Sample | Scenario | Highlights |
 | --- | --- | --- |
-| [Game Server Operations](samples/game-server-ops/README.md) | Investigate a healthy or degraded game server and perform a governed restart when justified. | Web UI, nested Harness and Agent Flows, OpenAI-compatible models, domain tools, Action Runtime audit. |
+| [Game Server Operations](samples/game-server-ops/README.md) | Investigate a healthy or degraded game server and perform a governed restart when justified. | Web UI, nested Harness and Agent Flows, governed Action, and executable scripted/live evaluation. |
+| [Customer Refund Operations](samples/customer-refund-ops/README.md) | Evaluate a customer refund request and execute only an eligible, policy-controlled refund. | Agent Recipe DSL, Harness retry, Action idempotency, and one correlated Core/Agent/Harness/Action trace. |
 
 The repository is one Gradle multi-project build. Every directory under
 `samples/` is an independent runnable Spring Boot application.
@@ -53,7 +54,7 @@ Normal tests are deterministic and do not call a model or require credentials.
 
 ## Build
 
-Published sample dependencies are pinned to these versions:
+The main `game-server-ops` runtime pins these Maven Central versions:
 
 | Dependency | Version |
 | --- | --- |
@@ -62,14 +63,27 @@ Published sample dependencies are pinned to these versions:
 | Flower Action Runtime | `0.3.1` |
 | Flower Agent | `0.1.0` |
 
+Its optional evaluation command follows `flower-evaluation:0.1.2-SNAPSHOT`
+until that module receives a coordinated release. The integration snapshot
+installer below prepares it as well.
+
 ```powershell
 git clone https://github.com/flowerjvm/flower-agent-samples.git
 cd flower-agent-samples
+.\gradlew.bat :samples:game-server-ops:check
+```
+
+The `customer-refund-ops` integration sample targets the current development
+snapshots so it can test the new cross-project observation adapters before a
+coordinated release. Prepare sibling checkouts with:
+
+```powershell
+.\scripts\install-integration-snapshots.ps1
 .\gradlew.bat check
 ```
 
-The build resolves all Flower libraries from Maven Central and does not use
-`mavenLocal()` or a mutable neighboring checkout.
+Maven Local is filtered to `io.github.flowerjvm` snapshot versions only.
+Released artifacts continue to resolve from Maven Central.
 
 ## Repository layout
 
@@ -83,6 +97,11 @@ flower-agent-samples/
       src/main/java/       Spring Boot host application
       src/main/resources/  configuration and browser UI
       src/test/java/       deterministic integration tests
+    customer-refund-ops/
+      build.gradle.kts
+      src/main/java/       refund domain and four-runtime composition
+      src/main/resources/  configuration
+      src/test/java/       deterministic trace and behavior tests
 ```
 
 ## Credential policy

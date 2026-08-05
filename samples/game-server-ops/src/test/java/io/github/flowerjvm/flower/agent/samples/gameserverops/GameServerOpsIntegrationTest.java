@@ -31,6 +31,8 @@ import io.github.flowerjvm.flower.agent.samples.gameserverops.action.RestartActi
 import io.github.flowerjvm.flower.agent.samples.gameserverops.config.ModelProperties;
 import io.github.flowerjvm.flower.agent.samples.gameserverops.domain.GameServerFleet;
 import io.github.flowerjvm.flower.agent.samples.gameserverops.domain.GameServerState;
+import io.github.flowerjvm.flower.agent.samples.gameserverops.evaluation.GameOpsEvaluationOutputFactory;
+import io.github.flowerjvm.flower.agent.samples.gameserverops.evaluation.GameOpsEvaluationPlan;
 import io.github.flowerjvm.flower.agent.samples.gameserverops.harness.FlowerAgentAiModelGateway;
 import io.github.flowerjvm.flower.agent.samples.gameserverops.harness.IncidentReport;
 import io.github.flowerjvm.flower.agent.samples.gameserverops.harness.IncidentReportFindingExtractor;
@@ -57,6 +59,12 @@ import io.github.flowerjvm.flower.core.event.InMemoryEventBus;
 import io.github.flowerjvm.flower.core.flow.FlowState;
 import io.github.flowerjvm.flower.core.time.ManualClock;
 import io.github.flowerjvm.flower.core.worker.Worker;
+import io.github.flowerjvm.flower.evaluation.EvaluationCandidate;
+import io.github.flowerjvm.flower.evaluation.EvaluationCaseStatus;
+import io.github.flowerjvm.flower.evaluation.EvaluationDataset;
+import io.github.flowerjvm.flower.evaluation.EvaluationExperiment;
+import io.github.flowerjvm.flower.evaluation.EvaluationExperimentResult;
+import io.github.flowerjvm.flower.evaluation.EvaluationRunner;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
@@ -72,7 +80,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GameServerOpsIntegrationTest {
 
     @Test
-    void outerHarnessRetryDoesNotRestartTheServerTwice() {
+    void outerHarnessRetryDoesNotRestartTheServerTwice() throws Exception {
         Instant now = Instant.parse("2026-08-01T00:00:00Z");
         Clock clock = Clock.fixed(now, ZoneOffset.UTC);
         ManualClock flowerClock = new ManualClock(now.toEpochMilli());
@@ -153,6 +161,24 @@ class GameServerOpsIntegrationTest {
                 .anyMatch(event -> event.type().name().equals("ACTION_DUPLICATE"));
         assertThat(task.harnessFlow().context().latestValidation())
                 .hasValueSatisfying(result -> assertThat(result.isValid()).isTrue());
+
+        EvaluationDataset evaluationDataset = EvaluationDataset
+                .builder(GameOpsEvaluationPlan.DATASET_ID, GameOpsEvaluationPlan.DATASET_VERSION)
+                .name("Degraded server integration scenario")
+                .example(GameOpsEvaluationPlan.degradedServerRecovery())
+                .build();
+        EvaluationExperiment evaluation = EvaluationExperiment.builder("integration-evaluation")
+                .dataset(evaluationDataset)
+                .candidate(EvaluationCandidate.builder("game-ops-agent", "scripted-test").build())
+                .target(example -> GameOpsEvaluationOutputFactory.from(
+                        task, fleet.server("server-alpha"), Duration.ZERO))
+                .suite(GameOpsEvaluationPlan.suite())
+                .build();
+        EvaluationExperimentResult evaluationResult = new EvaluationRunner(clock).run(evaluation);
+
+        assertThat(evaluationResult.getCases()).singleElement()
+                .extracting(value -> value.getStatus())
+                .isEqualTo(EvaluationCaseStatus.PASS);
     }
 
     @Test

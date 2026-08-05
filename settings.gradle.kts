@@ -8,3 +8,4 @@ pluginManagement {
 rootProject.name = "flower-agent-samples"
 
 include("samples:game-server-ops")
+include("samples:customer-refund-ops")
