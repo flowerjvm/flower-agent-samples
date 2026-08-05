@@ -38,7 +38,7 @@ flowchart LR
 | Sample | Scenario | Highlights |
 | --- | --- | --- |
 | [Game Server Operations](samples/game-server-ops/README.md) | Investigate a healthy or degraded game server and perform a governed restart when justified. | Web UI, nested Harness and Agent Flows, governed Action, and executable scripted/live evaluation. |
-| [Customer Refund Operations](samples/customer-refund-ops/README.md) | Evaluate a customer refund request and execute only an eligible, policy-controlled refund. | Agent Recipe DSL, Harness retry, Action idempotency, and one correlated Core/Agent/Harness/Action trace. |
+| [Customer Refund Operations](samples/customer-refund-ops/README.md) | Evaluate a customer refund request and execute only an eligible, policy-controlled refund. | Agent Recipe DSL, Harness retry, Action idempotency, executable evaluation, and Studio-linked Core/Agent/Harness/Action traces. |
 
 The repository is one Gradle multi-project build. Every directory under
 `samples/` is an independent runnable Spring Boot application.
@@ -51,6 +51,9 @@ The repository is one Gradle multi-project build. Every directory under
 - An API key only when the selected endpoint requires one
 
 Normal tests are deterministic and do not call a model or require credentials.
+The refund sample also has a deterministic evaluation command that emits both
+evaluation and observation JSONL with matching trace identifiers, so Flower
+Studio can open the exact execution behind each score.
 
 ## Build
 

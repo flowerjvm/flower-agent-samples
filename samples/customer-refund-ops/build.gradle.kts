@@ -21,6 +21,7 @@ dependencies {
 
     implementation("io.github.flowerjvm:flower-action-runtime-core:0.3.2-SNAPSHOT")
     implementation("io.github.flowerjvm:flower-action-runtime-observability:0.3.2-SNAPSHOT")
+    implementation("io.github.flowerjvm:flower-evaluation:0.1.2-SNAPSHOT")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -33,4 +34,14 @@ dependencies {
 
 flowerCheck {
     includeTests.set(false)
+}
+
+tasks.register<JavaExec>("runEvaluation") {
+    group = "application"
+    description = "Runs the refund Agent evaluation and writes linked Studio JSONL files."
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set(
+        "io.github.flowerjvm.flower.agent.samples.refundops.evaluation.RefundOpsEvaluationMain"
+    )
+    workingDir = project.projectDir
 }

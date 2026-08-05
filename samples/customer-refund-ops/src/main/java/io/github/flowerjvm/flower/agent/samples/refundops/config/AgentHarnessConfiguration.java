@@ -33,6 +33,7 @@ import io.github.flowerjvm.flower.ai.harness.spi.AiHarnessClock;
 import io.github.flowerjvm.flower.ai.harness.validator.jackson.JacksonPojoSchemaValidator;
 import io.github.flowerjvm.flower.core.engine.Engine;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -76,6 +77,11 @@ public class AgentHarnessConfiguration {
     }
 
     @Bean
+    @ConditionalOnProperty(
+            prefix = "sample.evaluation",
+            name = "scripted-model",
+            havingValue = "false",
+            matchIfMissing = true)
     AgentModelGateway refundAgentModelGateway(ModelProperties properties) {
         OpenAiCompatibleAgentGatewayConfig config = OpenAiCompatibleAgentGatewayConfig
                 .builder(properties.baseUrl())

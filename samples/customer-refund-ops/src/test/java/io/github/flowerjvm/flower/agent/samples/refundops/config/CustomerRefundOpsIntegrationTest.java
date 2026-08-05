@@ -20,6 +20,8 @@ import io.github.flowerjvm.flower.agent.samples.refundops.action.IssueRefundActi
 import io.github.flowerjvm.flower.agent.samples.refundops.action.RecordingAuditSink;
 import io.github.flowerjvm.flower.agent.samples.refundops.domain.OrderStatus;
 import io.github.flowerjvm.flower.agent.samples.refundops.domain.OrderStore;
+import io.github.flowerjvm.flower.agent.samples.refundops.evaluation.RefundOpsEvaluationOutputFactory;
+import io.github.flowerjvm.flower.agent.samples.refundops.evaluation.RefundOpsEvaluationPlan;
 import io.github.flowerjvm.flower.agent.samples.refundops.harness.FlowerAgentAiModelGateway;
 import io.github.flowerjvm.flower.agent.samples.refundops.harness.RefundOutcome;
 import io.github.flowerjvm.flower.agent.samples.refundops.harness.RefundReport;
@@ -50,6 +52,12 @@ import io.github.flowerjvm.flower.core.event.InMemoryEventBus;
 import io.github.flowerjvm.flower.core.flow.FlowState;
 import io.github.flowerjvm.flower.core.time.ManualClock;
 import io.github.flowerjvm.flower.core.worker.Worker;
+import io.github.flowerjvm.flower.evaluation.EvaluationCandidate;
+import io.github.flowerjvm.flower.evaluation.EvaluationCaseStatus;
+import io.github.flowerjvm.flower.evaluation.EvaluationDataset;
+import io.github.flowerjvm.flower.evaluation.EvaluationExperiment;
+import io.github.flowerjvm.flower.evaluation.EvaluationExperimentResult;
+import io.github.flowerjvm.flower.evaluation.EvaluationRunner;
 import io.github.flowerjvm.flower.observability.tracing.FlowerObservationEvent;
 import io.github.flowerjvm.flower.observability.tracing.FlowerTraceSinkListener;
 import io.github.flowerjvm.flower.observability.tracing.InMemoryFlowerObservationSink;
@@ -70,7 +78,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CustomerRefundOpsIntegrationTest {
 
     @Test
-    void eligibleRefundIsRetriedOnceGovernedAndCorrelatedAcrossAllRuntimes() {
+    void eligibleRefundIsRetriedOnceGovernedCorrelatedAndEvaluated() throws Exception {
         Fixture fixture = new Fixture(true);
 
         RefundTask task = fixture.run(
@@ -132,6 +140,30 @@ class CustomerRefundOpsIntegrationTest {
                 .doesNotContain("Refund this delivered order")
                 .doesNotContain("Delivered within the automatic refund window")
                 .doesNotContain("54000");
+
+        EvaluationDataset dataset = EvaluationDataset
+                .builder(RefundOpsEvaluationPlan.DATASET_ID, RefundOpsEvaluationPlan.DATASET_VERSION)
+                .name("Eligible refund integration scenario")
+                .example(RefundOpsEvaluationPlan.eligibleRefund())
+                .build();
+        EvaluationExperiment experiment = EvaluationExperiment.builder("refund-integration-test")
+                .dataset(dataset)
+                .candidate(EvaluationCandidate.builder("refund-ops-agent", "test").build())
+                .target(example -> RefundOpsEvaluationOutputFactory.from(
+                        task,
+                        fixture.orders.order("order-1001"),
+                        fixture.orders.refundExecutionCount(),
+                        Duration.ZERO))
+                .suite(RefundOpsEvaluationPlan.suite())
+                .build();
+        EvaluationExperimentResult evaluation = new EvaluationRunner(fixture.clock).run(experiment);
+
+        assertThat(evaluation.getCases()).singleElement().satisfies(result -> {
+            assertThat(result.getStatus()).isEqualTo(EvaluationCaseStatus.PASS);
+            assertThat(result.getTraceId()).isEqualTo(task.taskId());
+            assertThat(result.getRunId())
+                    .isEqualTo(task.harnessFlow().context().runId().value());
+        });
     }
 
     @Test

@@ -9,6 +9,9 @@ flower:
       interval-ms: 50
 
 sample:
+  observation:
+    file: ${FLOWER_OBSERVATION_FILE:}
+    queue-capacity: ${FLOWER_OBSERVATION_QUEUE_CAPACITY:4096}
   model:
     base-url: ${FLOWER_AGENT_BASE_URL:https://api.openai.com/v1}
     model: ${FLOWER_AGENT_MODEL:gpt-4.1-mini}

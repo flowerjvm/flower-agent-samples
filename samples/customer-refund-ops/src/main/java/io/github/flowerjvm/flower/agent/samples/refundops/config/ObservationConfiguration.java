@@ -7,6 +7,7 @@ import io.github.flowerjvm.flower.agent.observability.AgentObservationCorrelatio
 import io.github.flowerjvm.flower.agent.observability.AgentObservationSinkAdapter;
 import io.github.flowerjvm.flower.agent.observation.AgentEventSink;
 import io.github.flowerjvm.flower.agent.samples.refundops.trace.TraceCorrelationRegistry;
+import io.github.flowerjvm.flower.agent.samples.refundops.trace.RefundObservationDestination;
 import io.github.flowerjvm.flower.ai.harness.observability.AiHarnessObservationCorrelation;
 import io.github.flowerjvm.flower.ai.harness.observability.AiHarnessObservationTraceListener;
 import io.github.flowerjvm.flower.observability.tracing.FlowerObservationEvent;
@@ -16,6 +17,7 @@ import io.github.flowerjvm.flower.observability.tracing.FlowerTraceSinkListener;
 import io.github.flowerjvm.flower.observability.tracing.InMemoryFlowerObservationSink;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.time.Clock;
 
@@ -32,9 +34,17 @@ public class ObservationConfiguration {
         return new InMemoryFlowerObservationSink();
     }
 
+    @Bean(name = "refundObservationDestination", destroyMethod = "close")
+    RefundObservationDestination refundObservationDestination(
+            InMemoryFlowerObservationSink memory,
+            ObservationProperties properties
+    ) {
+        return new RefundObservationDestination(memory, properties);
+    }
+
     @Bean
     FlowerTraceSinkListener flowerTraceListener(
-            InMemoryFlowerObservationSink destination,
+            @Qualifier("refundObservationDestination") FlowerObservationSink destination,
             TraceCorrelationRegistry correlations
     ) {
         FlowerObservationSink correlatedCoreDestination = event ->
@@ -44,7 +54,7 @@ public class ObservationConfiguration {
 
     @Bean
     AgentEventSink agentEventSink(
-            InMemoryFlowerObservationSink destination,
+            @Qualifier("refundObservationDestination") FlowerObservationSink destination,
             TraceCorrelationRegistry correlations
     ) {
         return new AgentObservationSinkAdapter(destination, event -> correlations.find(event.runId())
@@ -54,7 +64,7 @@ public class ObservationConfiguration {
 
     @Bean
     AiHarnessObservationTraceListener aiHarnessObservationTraceListener(
-            InMemoryFlowerObservationSink destination,
+            @Qualifier("refundObservationDestination") FlowerObservationSink destination,
             TraceCorrelationRegistry correlations,
             Clock sampleClock
     ) {
@@ -68,7 +78,7 @@ public class ObservationConfiguration {
 
     @Bean(name = "refundActionTraceSink")
     TraceSink refundActionTraceSink(
-            InMemoryFlowerObservationSink destination,
+            @Qualifier("refundObservationDestination") FlowerObservationSink destination,
             TraceCorrelationRegistry correlations
     ) {
         return new ActionRuntimeObservationTraceSink(destination, event -> correlations.find(event.runId())

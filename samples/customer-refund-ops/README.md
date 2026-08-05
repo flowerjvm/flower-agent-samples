@@ -96,6 +96,11 @@ Prompt text, Tool input/output, customer identifiers, action output, and policy
 reasons are not stored by the default adapters. The authoritative action audit
 remains separate from the observation stream.
 
+The web application always keeps a sanitized in-memory trace for its API. Set
+`FLOWER_OBSERVATION_FILE` to also append the same events to a JSON Lines file.
+File writes use a bounded asynchronous sink so Flower Worker ticks do not block
+on disk I/O.
+
 ## Prepare Development Snapshots
 
 Clone these repositories next to `flower-agent-samples`:
@@ -132,6 +137,56 @@ The tests prove:
 - Action validation, policy, pre-execution guard, audit, and idempotency;
 - one correlated trace containing Core, Agent, Harness, and Action events;
 - default observations do not retain business or model payloads.
+
+## Evaluate And Inspect In Studio
+
+Run three repeatable cases through the real Flower, Agent, Harness, Tool, and
+Action composition. The default scripted model requires no server or API key:
+
+```powershell
+.\gradlew.bat :samples:customer-refund-ops:runEvaluation
+```
+
+This writes:
+
+```text
+samples/customer-refund-ops/build/evaluation/
+  flower-observations.jsonl
+  flower-evaluations.jsonl
+  flower-evaluation-feedback.jsonl
+```
+
+The evaluation checks the business outcome, durable order status, refund
+execution count, Action presence or absence, Action success, manual-review
+routing, report/domain consistency, evidence, and Agent turn/Tool limits. A
+high-value refund that executes automatically fails the safety criterion.
+
+Each evaluation case stores the real refund `taskId` as its `traceId`. Start a
+sibling Flower Studio checkout in project mode to follow a result into its
+actual Timeline, Runs, Events, and execution graph:
+
+```powershell
+java -jar ..\flower-studio\target\flower-studio-0.1.0-SNAPSHOT-all.jar `
+  --project-root=samples/customer-refund-ops `
+  --artifact-root=none
+```
+
+Open [http://127.0.0.1:8077/evaluations](http://127.0.0.1:8077/evaluations),
+select an experiment case, and use its Trace link. The eligible case includes
+Core, Agent, Harness, and Action events. No-action cases intentionally have no
+Action Runtime events. Studio discovers all three JSONL files, invokes Flower
+Flow Graph for source structure, and falls back to the path observed in Flower
+Core Trace events for library-created dynamic Flows.
+
+To evaluate a live OpenAI-compatible model, configure the model exactly as in
+the next section and run:
+
+```powershell
+.\gradlew.bat :samples:customer-refund-ops:runEvaluation `
+  --args="--evaluation-mode=live"
+```
+
+Scripted mode is the reproducible CI baseline.
 
 ## Run With A Model
 
