@@ -57,18 +57,17 @@ Studio can open the exact execution behind each score.
 
 ## Build
 
-The main `game-server-ops` runtime pins these Maven Central versions:
+Both samples pin these coordinated Maven Central versions:
 
 | Dependency | Version |
 | --- | --- |
-| Flower | `0.1.1` |
-| Flower AI Harness | `0.1.2` |
-| Flower Action Runtime | `0.3.1` |
-| Flower Agent | `0.1.0` |
+| Flower | `0.1.2` |
+| Flower AI Harness | `0.1.3` |
+| Flower Action Runtime | `0.3.2` |
+| Flower Agent | `0.2.0` |
 
-Its optional evaluation command follows `flower-evaluation:0.1.2-SNAPSHOT`
-until that module receives a coordinated release. The integration snapshot
-installer below prepares it as well.
+The optional evaluation commands use the released
+`flower-evaluation:0.1.2` module.
 
 ```powershell
 git clone https://github.com/flowerjvm/flower-agent-samples.git
@@ -76,17 +75,8 @@ cd flower-agent-samples
 .\gradlew.bat :samples:game-server-ops:check
 ```
 
-The `customer-refund-ops` integration sample targets the current development
-snapshots so it can test the new cross-project observation adapters before a
-coordinated release. Prepare sibling checkouts with:
-
-```powershell
-.\scripts\install-integration-snapshots.ps1
-.\gradlew.bat check
-```
-
-Maven Local is filtered to `io.github.flowerjvm` snapshot versions only.
-Released artifacts continue to resolve from Maven Central.
+No sibling checkout, snapshot installer, or `mavenLocal()` repository is
+required for the normal sample build.
 
 ## Repository layout
 
